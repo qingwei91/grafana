@@ -192,7 +192,18 @@ const MonacoQueryField = (props: Props) => {
               if (editor.getModel()?.id !== model.id) {
                 return { suggestions: [] };
               }
-              return completionProvider.provideCompletionItems(model, position, context, token);
+              const prom = new Promise((resolve, reject) => {
+                window.setTimeout(() => {
+                  const start = Date.now();
+                  let now = start;
+                  while (now - start < 3000) {
+                    now = Date.now();
+                  }
+                  resolve([]);
+                }, 0);
+              });
+              const act = completionProvider.provideCompletionItems(model, position, context, token);
+              return Promise.all([prom, act]).then((values) => values[1]);
             },
           };
 

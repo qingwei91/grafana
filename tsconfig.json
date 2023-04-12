@@ -10,7 +10,8 @@
     "useUnknownInCatchVariables": true,
     "incremental": true,
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
-    "preserveSymlinks": true
+    "preserveSymlinks": true,
+    "lib": ["dom", "es5", "scripthost", "es2015.promise"]
   },
   "extends": "@grafana/tsconfig/base.json",
   "include": [
