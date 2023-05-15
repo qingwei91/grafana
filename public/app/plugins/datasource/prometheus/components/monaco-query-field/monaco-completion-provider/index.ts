@@ -2,7 +2,7 @@ import type { Monaco, monacoTypes } from '@grafana/ui';
 
 import { getCompletions, DataProvider, CompletionType } from './completions';
 import { getSituation } from './situation';
-import { NeverCaseError } from './util';
+import { NeverCaseError, chunkToPromise } from './util';
 
 export function getSuggestOptions(): monacoTypes.editor.ISuggestOptions {
   return {
@@ -75,7 +75,8 @@ export function getCompletionProvider(
       // to stop it, we use a number-as-string sortkey,
       // so that monaco keeps the order we use
       const maxIndexDigits = items.length.toString().length;
-      const suggestions: monacoTypes.languages.CompletionItem[] = items.map((item, index) => ({
+
+      return chunkToPromise(items, 10000, (item, index) => ({
         kind: getMonacoCompletionItemKind(item.type, monaco),
         label: item.label,
         insertText: item.insertText,
@@ -89,8 +90,7 @@ export function getCompletionProvider(
               title: '',
             }
           : undefined,
-      }));
-      return { suggestions };
+      })).then((suggestions) => ({ suggestions }));
     });
   };
 

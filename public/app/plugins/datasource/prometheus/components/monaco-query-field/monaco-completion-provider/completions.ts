@@ -2,7 +2,7 @@ import { escapeLabelValueInExactSelector } from '../../../language_utils';
 import { FUNCTIONS } from '../../../promql';
 
 import type { Situation, Label } from './situation';
-import { NeverCaseError } from './util';
+import { NeverCaseError, chunkToPromise } from './util';
 // FIXME: we should not load this from the "outside", but we cannot do that while we have the "old" query-field too
 
 export type CompletionType = 'HISTORY' | 'FUNCTION' | 'METRIC_NAME' | 'DURATION' | 'LABEL_NAME' | 'LABEL_VALUE';
@@ -34,14 +34,15 @@ export type DataProvider = {
 // we order items like: history, functions, metrics
 
 async function getAllMetricNamesCompletions(dataProvider: DataProvider): Promise<Completion[]> {
-  const metrics = await dataProvider.getAllMetricNames();
-  return metrics.map((metric) => ({
-    type: 'METRIC_NAME',
-    label: metric.name,
-    insertText: metric.name,
-    detail: `${metric.name} : ${metric.type}`,
-    documentation: metric.help,
-  }));
+  return dataProvider.getAllMetricNames().then((metrics) =>
+    chunkToPromise(metrics, 10000, (metric) => ({
+      type: 'METRIC_NAME',
+      label: metric.name,
+      insertText: metric.name,
+      detail: `${metric.name} : ${metric.type}`,
+      documentation: metric.help,
+    }))
+  );
 }
 
 const FUNCTION_COMPLETIONS: Completion[] = FUNCTIONS.map((f) => ({

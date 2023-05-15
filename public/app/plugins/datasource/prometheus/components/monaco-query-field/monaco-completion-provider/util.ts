@@ -23,3 +23,25 @@ export class NeverCaseError extends Error {
     super('should never happen');
   }
 }
+
+export function chunks<T>(arr: T[], chunkSize: number): T[][] {
+  const res = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    res.push(arr.slice(i, i + chunkSize));
+  }
+  return res;
+}
+
+export function chunkToPromise<T, O>(arr: T[], chunkSize: number, f: (arg: T, index: number) => O): Promise<O[]> {
+  const promises: Array<Promise<O[]>> = chunks(arr, chunkSize).map(
+    (chunk) =>
+      new Promise((resolve) => {
+        setTimeout(() => {
+          const out = chunk.map(f);
+          resolve(out);
+        }, 0);
+      })
+  );
+  const empty: O[] = [];
+  return Promise.all(promises).then((outputChunks) => empty.concat(...outputChunks));
+}
